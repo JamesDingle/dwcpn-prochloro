@@ -14,6 +14,9 @@ You will need the following installed:
   - For linux these are available through the native package managers on the mainstream linux distributions
 
 ## Inputfile requirements
+
+I have created an example input file here: [Example file](https://rsg.pml.ac.uk/shared_files/jad/example_files/pp_prochloro_example.nc)
+
 This wrapper requires input data to be in a specific format currently which is a netcdf4 file on a lat/lon grid. The requirements are as follows:
 - dimensions: ['lat', 'lon', 'depth']
 - input variables
