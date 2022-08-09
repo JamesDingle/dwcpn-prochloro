@@ -144,7 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 rho: rho_data[[y, x]],
                 sigma: sigma_data[[y, x]],
                 cloud: 0.0,
-                yel_sub: 500.0,
+                yel_sub: 0.3,
                 par: par_data[[y, x]],
                 bw,
                 bbr,
