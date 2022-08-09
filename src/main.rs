@@ -75,8 +75,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mld = &ncfile.variable("mld").unwrap();
     let rho = &ncfile.variable("rho").unwrap();
     let sigma = &ncfile.variable("sigma").unwrap();
-    let pro_surf = &ncfile.variable("Pro_Surf").unwrap();
-    let pro_max = &ncfile.variable("Pro_Max").unwrap();
 
     let lat_data = lat.values::<f64>(None, None)?;
     let lon_data = lon.values::<f64>(None, None)?;
@@ -89,21 +87,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mld_data = mld.values::<f64>(None, None)?;
     let rho_data = rho.values::<f64>(None, None)?;
     let sigma_data = sigma.values::<f64>(None, None)?;
-    let pro_surf_data = pro_surf.values::<f64>(None, None)?;
-    let pro_max_data = pro_max.values::<f64>(None, None)?;
 
 
     const F64_FILLVALUE: f64 = 9969209968386869000000000000000000000.0;
     let mut pp_data = vec![F64_FILLVALUE; lat.len() * lon.len()];
     let mut spectral_i_star_mean_data = vec![F64_FILLVALUE; lat.len() * lon.len()];
     let mut euphotic_depth_data = vec![F64_FILLVALUE; lat.len() * lon.len()];
-
-    // 3d prochloro output depth profiles
-    let pro_profile_shape = (DEPTH_PROFILE_COUNT, lat.len(), lon.len());
-    let mut pp_prochloro_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
-    let mut pro_total_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
-    let mut pro_1_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
-    let mut pro_2_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
 
     let count = lat.len() * lon.len();
     let pb = ProgressBar::new(count as u64);
@@ -124,8 +113,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 || check_if_filled(zm_data[[y, x]], zm)
                 || check_if_filled(rho_data[[y, x]], rho)
                 || check_if_filled(sigma_data[[y, x]], sigma)
-                || check_if_filled(pro_max_data[[y, x]], sigma)
-                || check_if_filled(pro_surf_data[[y, x]], sigma)
             {
                 continue;
             }
@@ -154,10 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let settings = ModelSettings {
                 mld_only: args.is_present("mld"),
                 iom_only: args.is_present("iom"),
-                prochloro_inputs: Some(ProchloroInputs{
-                    prochloro_surface: pro_surf_data[[y,x]],
-                    prochloro_maximum: pro_max_data[[y,x]]
-                })
+                prochloro_inputs: None
             };
 
             match calc_production(&inputs, &settings) {
@@ -167,27 +151,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     pp_data[y * lon.len() + x] = model_output.pp_day.unwrap();
                     euphotic_depth_data[y * lon.len() + x] = model_output.euphotic_depth.unwrap();
                     spectral_i_star_mean_data[y * lon.len() + x] = model_output.par_noon_max.unwrap();
-
-                    // write out the depth profile results
-                    let pro_total_array = Array::from_vec(
-                        model_output.pro_total_profile.unwrap().clone().to_vec()
-                    );
-                    pro_total_profile.slice_mut(s![.., y, x]).assign(&pro_total_array);
-
-                    let pro_1_array = Array::from_vec(
-                        model_output.pro_1_profile.unwrap().clone().to_vec()
-                    );
-                    pro_1_profile.slice_mut(s![.., y, x]).assign(&pro_1_array);
-
-                    let pro_2_array = Array::from_vec(
-                        model_output.pro_2_profile.unwrap().clone().to_vec()
-                    );
-                    pro_2_profile.slice_mut(s![.., y, x]).assign(&pro_2_array);
-
-                    let pp_prochloro_array = Array::from_vec(
-                        model_output.pp_prochloro_profile.unwrap().clone().to_vec()
-                    );
-                    pp_prochloro_profile.slice_mut(s![.., y, x]).assign(&pp_prochloro_array);
 
                 },
                 Err(e) => {
@@ -207,22 +170,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut spectral_i_star_var = ncfile.variable_mut("i_star_mean").unwrap();
     spectral_i_star_var.put_values(&spectral_i_star_mean_data, None, None).expect("Could not write out i_star_mean values");
-
-    let mut pro_total_var = ncfile.variable_mut("pro_total").unwrap();
-    let pro_total_output = pro_total_profile.to_owned().into_raw_vec();
-    pro_total_var.put_values(&pro_total_output, None, None).expect("Could not write out Pro Total values");
-
-    let mut pro_1_var = ncfile.variable_mut("pro_1").unwrap();
-    let pro_1_output = pro_1_profile.to_owned().into_raw_vec();
-    pro_1_var.put_values(&pro_1_output, None, None).expect("Could not write out Pro Total values");
-
-    let mut pro_2_var = ncfile.variable_mut("pro_2").unwrap();
-    let pro_2_output = pro_2_profile.to_owned().into_raw_vec();
-    pro_2_var.put_values(&pro_2_output, None, None).expect("Could not write out Pro Total values");
-
-    let mut pp_prochloro_var = ncfile.variable_mut("prochlorococcus").unwrap();
-    let pp_prochloro_output = pp_prochloro_profile.to_owned().into_raw_vec();
-    pp_prochloro_var.put_values(&pp_prochloro_output, None, None).expect("Could not write out Pro Total values");
 
     Ok(())
 }
