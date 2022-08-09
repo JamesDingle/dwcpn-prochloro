@@ -100,6 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3d prochloro output depth profiles
     let pro_profile_shape = (DEPTH_PROFILE_COUNT, lat.len(), lon.len());
+    let mut pp_prochloro_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
     let mut pro_total_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
     let mut pro_1_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
     let mut pro_2_profile: Array3<f64> = Array3::from_elem(pro_profile_shape, F64_FILLVALUE);
@@ -143,7 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 rho: rho_data[[y, x]],
                 sigma: sigma_data[[y, x]],
                 cloud: 0.0,
-                yel_sub: 0.3,
+                yel_sub: 500.0,
                 par: par_data[[y, x]],
                 bw,
                 bbr,
@@ -183,6 +184,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
                     pro_2_profile.slice_mut(s![.., y, x]).assign(&pro_2_array);
 
+                    let pp_prochloro_array = Array::from_vec(
+                        model_output.pp_prochloro_profile.unwrap().clone().to_vec()
+                    );
+                    pp_prochloro_profile.slice_mut(s![.., y, x]).assign(&pp_prochloro_array);
+
                 },
                 Err(e) => {
                     println!("{:?}", e);
@@ -205,6 +211,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut pro_total_var = ncfile.variable_mut("pro_total").unwrap();
     let pro_total_output = pro_total_profile.to_owned().into_raw_vec();
     pro_total_var.put_values(&pro_total_output, None, None).expect("Could not write out Pro Total values");
+
+    let mut pro_1_var = ncfile.variable_mut("pro_1").unwrap();
+    let pro_1_output = pro_1_profile.to_owned().into_raw_vec();
+    pro_1_var.put_values(&pro_1_output, None, None).expect("Could not write out Pro Total values");
+
+    let mut pro_2_var = ncfile.variable_mut("pro_2").unwrap();
+    let pro_2_output = pro_2_profile.to_owned().into_raw_vec();
+    pro_2_var.put_values(&pro_2_output, None, None).expect("Could not write out Pro Total values");
+
+    let mut pp_prochloro_var = ncfile.variable_mut("prochlorococcus").unwrap();
+    let pp_prochloro_output = pp_prochloro_profile.to_owned().into_raw_vec();
+    pp_prochloro_var.put_values(&pp_prochloro_output, None, None).expect("Could not write out Pro Total values");
 
     Ok(())
 }
