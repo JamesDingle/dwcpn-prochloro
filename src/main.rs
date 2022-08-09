@@ -2,13 +2,11 @@
 
 
 use dwcpn::dwcpn::modules::pp_profile::{calculate_ay, calculate_bbr, calculate_bw};
-use dwcpn::{ModelInputs, ModelSettings, ProchloroInputs};
+use dwcpn::{ModelInputs, ModelSettings};
 use dwcpn::dwcpn::dwcpn::calc_production;
-use dwcpn::dwcpn::modules::config::DEPTH_PROFILE_COUNT;
 use indicatif::{ProgressBar, ProgressStyle};
 use clap::{Command, Arg};
 
-use ndarray::{Array, Array3, s};
 use netcdf;
 use netcdf::Variable;
 
