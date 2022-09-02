@@ -7,8 +7,9 @@ edition = "2018"
 
 [dependencies]
 # dwcpn = { git = "https://github.com/JamesDingle/dwcpn" }
-dwcpn = { git = "https://github.com/JamesDingle/dwcpn", branch="main" }
+# dwcpn = { git = "https://github.com/JamesDingle/dwcpn", branch="main" }
+dwcpn = { path="/Users/james/work/code/dwcpn"}
 ndarray = "0.15.4"
 clap = "3.0.7"
 netcdf = "0.7.0"
-indicatif = "0.16.2"
+indicatif = "0.17.0"

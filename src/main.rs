@@ -1,6 +1,8 @@
 // use dwcpn::{self, dwcpn::{dwcpn::{ModelSettings, ModelInputs, calc_pp}, modules::pp_profile::{calculate_ay, calculate_bw, calculate_bbr}}};
 
 
+use std::time::Duration;
+
 use dwcpn::dwcpn::modules::pp_profile::{calculate_ay, calculate_bbr, calculate_bw};
 use dwcpn::{ModelInputs, ModelSettings};
 use dwcpn::dwcpn::dwcpn::calc_production;
@@ -94,9 +96,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let count = lat.len() * lon.len();
     let pb = ProgressBar::new(count as u64);
-    pb.set_draw_delta(1000);
-    pb.set_style(ProgressStyle::default_bar()
-        .template("{msg} {spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% [{pos:>7}/{len:7} @ {per_sec}] (ETA: {eta})")
+    pb.set_style(
+        ProgressStyle::with_template("{msg} {spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% [{pos:>7}/{len:7} @ {per_sec}] (ETA: {eta})")
+        .unwrap()
         .progress_chars("#>-"));
 
     for y in 0..lat.len() {
